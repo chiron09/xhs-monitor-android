@@ -33,3 +33,7 @@ deploy/
 .DS_Store
 .idea/
 .vscode/
+
+# ===== GitHub 凭据（绝不入库）=====
+.gh_token
+*.token

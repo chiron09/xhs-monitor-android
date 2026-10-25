@@ -30,3 +30,7 @@ backfill_tokens.py
 DEPLOY.md
 
 # 保留：vendor_algo/（算法资产，XHS_ALGO_BASE 指向它）、static/（前端）
+
+# 凭据
+.gh_token
+*.token
