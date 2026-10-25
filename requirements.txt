@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+apscheduler
+pydantic
+requests
+pillow
+tls-client
+pysocks
+loguru
+cryptography

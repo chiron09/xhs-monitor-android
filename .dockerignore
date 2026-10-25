@@ -1,0 +1,32 @@
+# 运行时数据：DB / 日志 / 封面一律由 volume 挂载，绝不进镜像
+# （否则镜像里会固化一份旧数据库；实测旧镜像里就有 data/xhs_admin.db 和 proxy_lib.db）
+data/*
+# 例外：data/reverse 是随项目走的逆向资产（1643 path / 124 header / 62 命令号），
+# 打进镜像做兜底 —— 万一宿主机 data 挂载丢了，/api/reverse/* 仍有数据
+!data/reverse
+*.db
+*.db-journal
+*.db-wal
+*.log
+
+# Python 字节码
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# 一次性排查脚本（不属于运行时）
+_*.py
+_probe_db.py
+backfill_tokens.py
+
+# 版本库与打包产物
+.git/
+.gitignore
+*.tgz
+*.bak
+*.zip
+
+# 文档（运行时不读，减小镜像）
+DEPLOY.md
+
+# 保留：vendor_algo/（算法资产，XHS_ALGO_BASE 指向它）、static/（前端）

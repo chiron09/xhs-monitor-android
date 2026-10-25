@@ -1,0 +1,37 @@
+services:
+  xhs-monitor:
+    build: .
+    image: xhs-monitor:latest
+    container_name: xhs-monitor
+    restart: unless-stopped
+    expose:
+      - "8091"
+    environment:
+      # 算法库（algo_complete.json 等）已随镜像打进 /app/vendor_algo
+      - XHS_ALGO_BASE=/app/vendor_algo
+      # 后台密码（与 1Panel 部署约定一致；可在面板环境变量里改）
+      - XHS_ADMIN_PASSWORD=admin123
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./data:/app/data        # 数据库/封面/日志持久化
+      - ./static:/app/static    # 前端静态文件（方便改版不用重建镜像）
+    networks:
+      - web
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: xhs-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"       # 对外入口 → 反代 xhs-monitor:8091
+      # - "443:443"   # 有域名/证书后再开
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - xhs-monitor
+    networks:
+      - web
+
+networks:
+  web:
+    driver: bridge

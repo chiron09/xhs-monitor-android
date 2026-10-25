@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书博主监控后台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff2442'/%3E%3Ctext x='16' y='22' font-size='17' font-family='sans-serif' font-weight='bold' fill='%23fff' text-anchor='middle'%3E红%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://registry.npmmirror.com/element-plus/2.9.1/files/dist/index.css">
+<style>
+[v-cloak]{display:none}
+html,body,#app{height:100%;margin:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6f8}
+
+/* 登录页（仿小红书创作服务平台） */
+.login-wrap{min-height:100%;display:flex;flex-direction:column;background:linear-gradient(120deg,#e7edf8 0%,#f3eef3 45%,#fbeef0 100%)}
+.login-topbar{height:60px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px;box-shadow:0 1px 6px rgba(31,45,61,.06);position:relative;z-index:2}
+.login-brand{display:flex;align-items:center;gap:10px}
+.logo-block{background:#ff2442;color:#fff;font-weight:700;padding:5px 9px;border-radius:6px;font-size:14px;letter-spacing:1px}
+.brand-name{font-size:17px;font-weight:600;color:#000}
+.topbar-link{color:#606266;font-size:14px;cursor:pointer}
+.login-body{flex:1;display:flex;align-items:center;justify-content:space-between;padding:0 9%;gap:40px;position:relative;overflow:hidden}
+.login-hero{position:relative;z-index:1}
+.login-hero h1{font-size:38px;line-height:1.45;color:#22242a;font-weight:700;margin:0}
+.login-hero p{color:#7a7f89;margin-top:16px;font-size:15px}
+.hero-bubbles .bubble{position:absolute;border-radius:50%;opacity:.9}
+.b1{width:150px;height:150px;background:linear-gradient(135deg,#ffe1b8,#ffc394);left:4%;top:58%}
+.b2{width:240px;height:240px;background:linear-gradient(135deg,#c7daf7,#a8c2ef);left:24%;top:34%}
+.b3{width:110px;height:110px;background:linear-gradient(135deg,#cdeeda,#a8dcc4);left:18%;top:14%}
+.b4{width:185px;height:185px;background:linear-gradient(135deg,#f8cbd9,#f2a9c4);left:44%;top:58%}
+.b5{width:90px;height:90px;background:linear-gradient(135deg,#fde3b8,#fbd090);left:56%;top:28%}
+.login-card{width:400px;max-width:92vw;background:#fff;border-radius:14px;padding:38px 34px;box-shadow:0 14px 44px rgba(31,45,61,.12);position:relative;z-index:1}
+.card-title{font-size:18px;font-weight:600;color:#22242a;margin-bottom:26px}
+.login-btn{width:100%;border-radius:22px;margin-top:22px;font-size:16px}
+.login-footer{text-align:center;padding:18px;color:#9aa0ab;font-size:12px;position:relative;z-index:1}
+
+/* 侧边栏 */
+.side-logo{height:56px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 10px;border-bottom:1px solid #ebeef5;overflow:hidden;white-space:nowrap}
+.side-logo .brand-name{font-size:15px;font-weight:700;color:#000}
+.side-logo .logo-block{font-size:12px;padding:4px 8px;flex-shrink:0}
+.side-logo.collapsed{padding:0 4px}
+.side-logo.collapsed .logo-block{font-size:11px;padding:3px 5px;letter-spacing:0}
+.side-menu{border-right:none}
+.side-footer{padding:16px;border-top:1px solid #ebeef5;margin-top:auto}
+.aside{display:flex;flex-direction:column}
+
+/* 顶栏 */
+.topbar{height:56px;display:flex;align-items:center;padding:0;background:#fff;border-bottom:1px solid #ebeef5}
+.topbar .page-title{font-size:15px;font-weight:600}
+/* 顶栏内层与内容区同宽居中，保证上下左右边界严格对齐 */
+.topbar-inner{width:100%;max-width:1280px;margin:0 auto;padding:0 20px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between}
+@media (min-width:1600px){ .topbar-inner{max-width:1440px} }
+@media (min-width:1920px){ .topbar-inner{max-width:1600px;padding:0 28px} }
+
+/* 主内容区：宽屏居中 + 上下与顶栏对齐
+   原来 max-width:1280px 直接写死在标签上，宽屏时内容贴左、右侧大片留白。
+   这里改用「内层容器居中」方案：el-main 撑满，内部 .content-inner 居中限宽。
+   关键：el-main 是 flex 子项，必须加 min-width:0，否则带 max-width 的内层
+   会参与 flex 基准计算、把 el-main 撑得比容器还宽，导致 margin:auto 算成负值。 */
+.el-main{padding:0 !important;min-width:0}
+.content-inner{width:100%;max-width:1280px;margin:0 auto;padding:20px;box-sizing:border-box}
+/* 大屏放开最大宽度，让表格有更多横向空间 */
+@media (min-width:1600px){ .content-inner{max-width:1440px} }
+@media (min-width:1920px){ .content-inner{max-width:1600px;padding:24px 28px} }
+
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.toolbar .spacer{flex:1}
+.img-error{width:50px;height:50px;border-radius:6px;background:#f2f3f5;display:flex;align-items:center;justify-content:center;color:#c0c4cc;font-size:12px}
+.card{background:#fff;border-radius:10px;padding:16px;border:1px solid #f0f1f4}
+
+/* ================= PC 端布局优化 ================= */
+
+/* 卡片标题栏（如「添加博主」上方的说明行）与工具条之间的呼吸感 */
+.card + .card{margin-top:16px}
+
+/* --- 表格：宽屏下的可读性优化 --- */
+.el-table{--el-table-border-color:#f0f1f4}
+.el-table th.el-table__cell{background:#fafbfc;font-weight:600;color:#5f6470}
+.el-table .el-table__cell{padding:10px 0}
+/* 行悬浮高亮更明显，长表格里更容易定位当前行 */
+.el-table tbody tr:hover > td.el-table__cell{background:#f7f9fc !important}
+/* 表格内容为空时给足高度，避免卡片塌成一条 */
+.el-table__empty-block{min-height:200px}
+.el-table__empty-text{color:#a8adb8}
+/* 时间/数字列用等宽感字体，纵向对齐更整齐 */
+.el-table td.el-table__cell{font-variant-numeric:tabular-nums}
+/* 操作列的按钮组留给手指/鼠标足够的点击间距 */
+.el-table .el-button + .el-button{margin-left:8px}
+/* 长表格：表头吸顶，滚动时始终可见列名 */
+.table-scroll{max-height:calc(100vh - 300px);overflow:auto}
+.table-scroll .el-table__header-wrapper{position:sticky;top:0;z-index:2;background:#fff}
+
+/* 表格上方的说明文字：放到工具条末尾更省空间，宽屏不换行 */
+.toolbar .hint{font-size:13px;color:#8a919f;margin-left:4px}
+
+/* --- 设置页布局：上区（密码 + 监控参数并排）下区（推送全宽） --- */
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+.settings-grid .card{margin-top:0}
+.settings-grid .card.full{grid-column:1 / -1}
+@media (max-width:1200px){ .settings-grid{grid-template-columns:1fr} .settings-grid .card.full{grid-column:auto} }
+/* 卡片标题/说明的统一样式（替代散落的内联 style） */
+.card-head{font-size:16px;font-weight:600;color:#22242a;margin-bottom:18px}
+.card-desc{font-size:12px;color:#8a919f;margin:-12px 0 18px}
+/* 监控参数：2×2 网格，label 在上、说明在下，避免窄卡片里文字横向挤压换行 */
+.tunable-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}
+.tunable-label{font-size:13px;color:#606266;margin-bottom:6px;font-weight:500}
+.tunable-hint{font-size:12px;color:#8a919f;margin-top:5px;line-height:1.5}
+.tunable-actions{margin-top:20px}
+@media (max-width:600px){ .tunable-grid{grid-template-columns:1fr} }
+/* 推送渠道在宽屏下两列排布，窄屏自动回落到单列 */
+.notify-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
+@media (max-width:1100px){ .notify-list{grid-template-columns:1fr} }
+.notify-item{padding:16px 0;border-top:1px solid #f0f0f0}
+/* 单列时首项去掉顶部分割线（上方已有 panel-sub 分隔） */
+@media (max-width:1100px){ .notify-list .notify-item:first-child{border-top:1px solid #f0f0f0} }
+
+/* --- 强调块：把「启用推送」做成独立的浅色区块，视觉上分组更清晰 --- */
+.panel-sub{background:#fafbfc;border:1px solid #f0f1f4;border-radius:8px;padding:14px 16px;margin-bottom:16px}
+
+/* --- 统计信息行（表格下方「共 N 条笔记」） --- */
+.stat-line{font-size:12px;color:#8a919f;margin-top:12px}
+.stat-line b{color:#303133;font-weight:600}
+
+/* --- 设备概览条：卡片顶部一行状态统计（色点 + 数字） --- */
+.acct-overview{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:12px 14px;background:#fafbfc;border:1px solid #f0f1f4;border-radius:8px;margin-bottom:14px}
+.ov-item{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#606266;white-space:nowrap}
+.ov-item b{color:#303133;font-weight:600}
+.ov-item.ov-right{margin-left:auto;color:#8a919f}
+.ov-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+@media (max-width:600px){ .ov-item.ov-right{margin-left:0} .acct-overview{gap:12px} }
+
+/* --- 监控时段控件 --- */
+.time-range{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%}
+.time-range-inputs{display:inline-flex;align-items:center;gap:0}
+.time-hint{font-size:12px;color:#a3a9b5;line-height:1.5;margin-top:4px;width:100%}
+
+/* 顶部栏的汉堡按钮（桌面隐藏，手机显示） */
+.mobile-menu-btn{display:none}
+/* 手机端侧边栏遮罩 */
+.side-mask{display:none}
+
+/* 浏览器登录 tab：把弹窗撑开，内嵌画面才够大、二维码才扫得清
+   （必须放在下面所有 @media 之外，否则窄屏规则把它盖掉）
+   弹窗宽度：只在该 tab 下生效，覆盖 el-dialog 上的 width="560px" 内联宽度。
+   用 !important 压过 Element Plus 写在 style 上的宽度。
+   max-width 1680px：画面源图 CSS 宽 1584px，弹窗再宽只会把图放大变糊。 */
+.el-dialog.wide-login{width:92vw !important;max-width:1680px !important;margin-top:2vh !important}
+.el-dialog.wide-login .el-dialog__body{padding:12px 16px;max-height:88vh;overflow:auto}
+/* 浏览器登录画面容器：撑满弹窗宽度；限高（弹窗 body 88vh 减去按钮/提示区约 300px），
+   画面超出在容器内滚动，避免弹窗 body 出现第二根滚动条 */
+.login-frame-wrap{width:100%;max-width:100%;max-height:max(320px,calc(88vh - 300px));margin:10px auto;background:#fff;border:1px solid #dcdfe6;border-radius:8px;overflow:auto;-webkit-overflow-scrolling:touch}
+/* 画面内容块：始终适应宽度显示，img 撑满容器宽、高度自适应 */
+.login-frame-view{display:block}
+.login-frame-hint{max-width:100%;margin:0 auto;padding:8px 12px;font-size:12px;color:#8a919f;text-align:center;line-height:1.7}
+
+/* ================= 响应式：窄屏 / 手机适配 ================= */
+
+/* 平板 / 小笔记本：不再让弹窗保持固定像素宽 */
+@media (max-width: 992px) {
+  .el-dialog:not(.wide-login){width:86vw !important;max-width:86vw !important}
+}
+
+/* 手机 / 窄屏主适配层（断点与 JS 的 window.innerWidth < 768 严格对齐：
+   CSS 用 max-width:767.98px，避免 768px（iPad 竖屏）被误判为手机） */
+@media (max-width: 767.98px) {
+  /* ---- 登录页 ---- */
+  .login-body{padding:22px 16px}
+  .login-card{max-width:100%;width:100%;box-sizing:border-box;padding:26px 20px;border-radius:12px;box-shadow:0 8px 26px rgba(31,45,61,.10)}
+  .login-topbar{height:52px;padding:0 14px}
+  .brand-name{font-size:15px}
+  .login-body{flex-direction:column;justify-content:center;gap:24px;padding:22px 5%}
+  .login-hero{text-align:center}
+  .login-hero h1{font-size:24px;line-height:1.5}
+  .login-hero p{margin-top:10px;font-size:13px}
+  .hero-bubbles{display:none}
+  .card-title{font-size:16px;margin-bottom:20px}
+
+  /* ---- 布局容器：允许纵向伸缩，禁止横向撑破 ---- */
+  .el-container,.aside{min-width:0}
+  .el-main{padding:0 !important;max-width:100% !important}
+  .content-inner{padding:12px;max-width:100%}
+  .topbar{height:50px !important}
+  .topbar-inner{padding:0 10px}
+  .topbar .page-title{font-size:14px}
+  .card{padding:12px;border-radius:8px}
+
+  /* ---- 侧边栏改为抽屉式：默认移出屏幕，点汉堡后滑入 ---- */
+  .mobile-menu-btn{display:inline-flex}
+  .desktop-toggle{display:none}
+  .topbar-logout{display:none}
+  .aside{position:fixed;top:0;bottom:0;left:0;z-index:2000;
+         transform:translateX(-100%);transition:transform .25s ease;
+         box-shadow:2px 0 16px rgba(0,0,0,.14);width:220px !important}
+  .el-container.side-open .aside{transform:translateX(0)}
+  .el-container.side-open .side-mask{display:block}
+  .side-mask{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:1999}
+  .side-logo{padding-left:14px;justify-content:flex-start}
+  .side-menu:not(.el-menu--collapse){border-right:none}
+
+  /* ---- 弹窗：满宽、内容可滚动、底部按钮不贴边 ---- */
+  .el-dialog{width:94vw !important;max-width:94vw !important;margin-top:5vh !important;border-radius:12px}
+  .el-dialog.wide-login{margin-top:2vh !important}
+  /* 手机端登录画面容器限高改为随内容（弹窗 body 自身已限高滚动） */
+  .login-frame-wrap{max-height:none}
+  .el-dialog__header{padding:14px 16px 10px}
+  .el-dialog__body{padding:12px 14px;max-height:74vh;overflow:auto;-webkit-overflow-scrolling:touch}
+  .el-dialog__footer{padding:10px 14px 14px}
+  .el-dialog__title{font-size:16px}
+  /* footer 按钮在窄屏均匀铺开，便于手指点按 */
+  .el-dialog__footer .el-button{min-height:38px}
+
+  /* ---- 表单：标签改到输入框上方，避免被压成一条缝 ---- */
+  .el-form-item{flex-direction:column;align-items:stretch}
+  .el-form-item__label{justify-content:flex-start !important;text-align:left !important;
+                       width:auto !important;max-width:100% !important;
+                       padding:0 0 4px 0 !important;line-height:1.4;height:auto}
+  .el-form-item__content{margin-left:0 !important}
+  .el-select,.el-input,.el-input-number{max-width:100%}
+
+  /* ---- 工具条：按钮可换行铺满 ---- */
+  .toolbar{gap:8px;margin-bottom:12px}
+  .toolbar .spacer{display:none}
+  .toolbar .el-button{flex:1 1 auto;margin-left:0 !important}
+  .toolbar > .el-select{width:100% !important}
+
+  /* ---- 表格：窄屏下允许横向滑动，操作列不再固定以免遮挡内容 ---- */
+  .el-table{font-size:13px;width:100% !important}
+  .el-table .cell{padding-left:8px;padding-right:8px;word-break:break-word}
+  /* 窄屏取消固定列（Element Plus 的固定层会遮挡滑动的表格内容） */
+  .el-table__fixed,.el-table__fixed-right{display:none !important}
+  .el-table th.el-table-fixed-column--right,
+  .el-table td.el-table-fixed-column--right,
+  .el-table th.el-table-fixed-column--left,
+  .el-table td.el-table-fixed-column--left{position:static !important;background:inherit !important}
+  /* 卡片作为横向滚动容器 */
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* 手机端表头不吸顶（横向滚动时 sticky 表头会错位） */
+  .table-scroll{max-height:none;overflow:visible}
+  .table-scroll .el-table__header-wrapper{position:static}
+  /* 表格外层滚动条更细，减少遮挡 */
+  .el-scrollbar__bar{opacity:.35}
+
+  /* ---- 设置页表单块不再固定窄宽 ---- */
+  .card[style*="max-width:460px"],.narrow-card{max-width:100% !important}
+  /* 设置页推送渠道标题行：窄屏改为上下堆叠 */
+  .notify-head{flex-direction:column;align-items:flex-start !important;gap:8px}
+  .notify-head > div:last-child{align-self:flex-end}
+  /* 启用推送 / 测试按钮行：窄屏铺开 */
+  .notify-actions{flex-wrap:wrap}
+  .notify-actions .el-button{flex:1 1 auto;margin-left:0 !important}
+
+  /* ---- 浏览器登录画面 ---- */
+  #loginFrame{cursor:default}
+}
+
+/* 超小屏（手机竖屏窄机）微调 */
+@media (max-width: 480px) {
+  .toolbar{gap:6px}
+  .toolbar .el-button{font-size:13px;padding:8px 10px}
+  .el-message-box{width:90vw !important}
+  .el-message{min-width:0 !important;width:90vw}
+  .login-hero h1{font-size:21px}
+  .el-dialog{width:96vw !important;max-width:96vw !important}
+  .el-dialog__body{max-height:70vh}
+  /* 数字输入框 + 后缀文字换行显示 */
+  .el-input-number{width:100%}
+}
+</style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <!-- 登录页 -->
+  <div v-if="!token" class="login-wrap">
+    <header class="login-topbar">
+      <div class="login-brand">
+        <span class="logo-block">小红书</span>
+        <span class="brand-name">博主监控后台</span>
+      </div>
+      <span class="topbar-link">帮助</span>
+    </header>
+    <div class="login-body">
+      <div class="hero-bubbles">
+        <span class="bubble b1"></span>
+        <span class="bubble b2"></span>
+        <span class="bubble b3"></span>
+        <span class="bubble b4"></span>
+        <span class="bubble b5"></span>
+      </div>
+      <div class="login-hero">
+        <h1>加入我们<br>解锁博主监控能力</h1>
+        <p>让新笔记追踪、推送提醒、竞品分析更高效。</p>
+      </div>
+      <div class="login-card">
+        <div class="card-title">密码登录</div>
+        <el-input v-model="loginPwd" type="password" placeholder="后台密码" show-password size="large" @keyup.enter="doLogin"></el-input>
+        <el-button type="danger" size="large" class="login-btn" :loading="logging" @click="doLogin">登 录</el-button>
+      </div>
+    </div>
+    <footer class="login-footer">小红书博主监控后台 · 仅供学习研究使用</footer>
+  </div>
+
+  <!-- 主界面 -->
+  <el-container v-else style="height:100%" :class="{'side-open': sidebarOpen}">
+    <el-aside :width="sidebarCollapse ? '64px' : '220px'" class="aside" style="background:#fff;border-right:1px solid #ebeef5;transition:width .2s">
+      <div class="side-logo" :class="{collapsed: sidebarCollapse}">
+        <span class="logo-block">小红书</span>
+        <span class="brand-name" v-if="!sidebarCollapse">博主监控后台</span>
+      </div>
+      <el-menu :default-active="activeTab" class="side-menu" :collapse="sidebarCollapse" :collapse-transition="false" @select="switchTab">
+        <el-menu-item index="accounts"><el-icon><user></user></el-icon><template #title>设备管理</template></el-menu-item>
+        <el-menu-item index="bloggers"><el-icon><monitor></monitor></el-icon><template #title>博主监控</template></el-menu-item>
+        <el-menu-item index="notes"><el-icon><document></document></el-icon><template #title>笔记记录</template></el-menu-item>
+        <el-menu-item index="settings"><el-icon><setting></setting></el-icon><template #title>系统设置</template></el-menu-item>
+      </el-menu>
+      <div class="side-footer">
+        <div v-if="!sidebarCollapse" style="font-size:12px;color:#8a919f;margin-bottom:10px">
+          <el-icon><circle-check-filled></circle-check-filled></el-icon> 调度器运行中
+        </div>
+        <el-button size="small" style="width:100%" @click="doLogout">
+          <span v-if="!sidebarCollapse">退出登录</span>
+          <el-icon v-else><switch-button></switch-button></el-icon>
+        </el-button>
+      </div>
+    </el-aside>
+    <!-- 手机端抽屉遮罩：点击关闭侧边栏 -->
+    <div class="side-mask" @click="sidebarOpen = false"></div>
+
+    <el-container>
+      <el-header class="topbar" height="56px">
+        <div class="topbar-inner">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            <el-button class="mobile-menu-btn" text @click="sidebarOpen = !sidebarOpen; sidebarCollapse = false">
+              <el-icon><expand></expand></el-icon>
+            </el-button>
+            <el-button class="desktop-toggle" text @click="sidebarCollapse = !sidebarCollapse">
+              <el-icon><expand v-if="sidebarCollapse"></expand><fold v-else></fold></el-icon>
+            </el-button>
+            <div class="page-title">{{ pageTitle }}</div>
+          </div>
+          <el-button class="topbar-logout" size="small" @click="doLogout">退出登录</el-button>
+        </div>
+      </el-header>
+      <el-main>
+        <div class="content-inner">
+
+        <!-- 设备管理 -->
+        <div v-if="activeTab==='accounts'">
+          <div class="toolbar">
+            <el-button type="danger" @click="openDeviceDialog">＋ 添加设备</el-button>
+            <el-button :loading="accountsLoading" @click="refreshAccounts"><el-icon><refresh></refresh></el-icon>刷新</el-button>
+            <span class="hint">刷新 = 重新拉取列表；要更新登录态请逐台「检测」或用「全部检测」</span>
+            <div class="spacer"></div>
+            <el-button type="primary" plain :loading="bulkChecking" :disabled="!accounts.length" @click="checkAllAccounts">全部检测</el-button>
+            <el-input v-model="deviceKeyword" placeholder="搜索设备 / 账号名 / ID / 代理" clearable style="width:250px">
+              <template #prefix><el-icon><search></search></el-icon></template>
+            </el-input>
+          </div>
+          <div class="card">
+            <div class="acct-overview">
+              <span class="ov-item"><i class="ov-dot" style="background:#909399"></i>共 <b>{{acctStats.total}}</b> 台</span>
+              <span class="ov-item"><i class="ov-dot" style="background:#67c23a"></i>正常 <b>{{acctStats.active}}</b></span>
+              <span class="ov-item"><i class="ov-dot" style="background:#e6a23c"></i>待处理 <b>{{acctStats.pending}}</b></span>
+              <span class="ov-item"><i class="ov-dot" style="background:#f56c6c"></i>异常 <b>{{acctStats.bad}}</b></span>
+              <span class="ov-item ov-right"><i class="ov-dot" style="background:#409eff"></i>已配代理 <b>{{acctStats.proxied}}</b></span>
+            </div>
+            <div class="table-scroll">
+            <el-table :data="filteredAccounts" stripe empty-text="暂无设备，点击上方「添加设备」">
+              <el-table-column prop="id" label="ID" width="56"></el-table-column>
+              <el-table-column label="设备" min-width="130" show-overflow-tooltip>
+                <template #default="{row}">{{row.name || row.label || '未命名'}}</template>
+              </el-table-column>
+              <el-table-column label="账号名" min-width="130" show-overflow-tooltip>
+                <template #default="{row}">{{row.nickname || '—'}}</template>
+              </el-table-column>
+              <el-table-column label="状态" width="92">
+                <template #default="{row}"><el-tag :type="statusType(row.status)" size="small">{{statusText(row.status)}}</el-tag></template>
+              </el-table-column>
+              <el-table-column prop="last_checked_at" label="最近检测" min-width="150"></el-table-column>
+              <el-table-column label="代理" min-width="170" show-overflow-tooltip>
+                <template #default="{row}">
+                  <span v-if="hasProxy(row)" style="font-size:12px;color:#606266;white-space:nowrap">
+                    <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#67c23a;margin-right:6px;vertical-align:middle"></span>{{maskProxy(row.payload)}}
+                  </span>
+                  <span v-else style="font-size:12px;color:#c0c4cc">直连</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="220" fixed="right">
+                <template #default="{row}">
+                  <el-button size="small" link type="primary" @click="openEdit(row)"><el-icon><edit></edit></el-icon>编辑</el-button>
+                  <el-button size="small" link type="success" @click="openLogin(row)"><el-icon><user></user></el-icon>登录</el-button>
+                  <el-button size="small" link type="warning" @click="checkAccount(row)"><el-icon><search></search></el-icon>检测</el-button>
+                  <el-button size="small" link type="danger" @click="deleteAccount(row)"><el-icon><delete></delete></el-icon>删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            </div>
+            <div class="stat-line">
+              <template v-if="deviceKeyword">匹配 <b>{{filteredAccounts.length}}</b> / 共 {{accounts.length}} 台</template>
+              <template v-else>点击「检测」刷新登录态；代理列绿点表示已走代理</template>
+            </div>
+          </div>
+        </div>
+
+        <!-- 博主监控 -->
+        <div v-if="activeTab==='bloggers'">
+          <div class="toolbar">
+            <el-button type="danger" @click="openBloggerDialog()">＋ 添加博主</el-button>
+            <el-button @click="openFollowImport">导入关注列表</el-button>
+            <el-button @click="loadBloggers"><el-icon><refresh></refresh></el-icon>刷新</el-button>
+            <el-button :disabled="!bloggerSelection.length" @click="openBatchDialog">批量修改（{{bloggerSelection.length}}）</el-button>
+            <div class="spacer"></div>
+            <el-input v-model="bloggerKeyword" placeholder="搜索博主名 / ID / 链接" clearable style="width:240px">
+              <template #prefix><el-icon><search></search></el-icon></template>
+            </el-input>
+            <span class="hint">添加后立即建立基线，此后只记录新发布的笔记</span>
+          </div>
+          <div class="card">
+            <div class="table-scroll">
+            <el-table :data="filteredBloggers" stripe @selection-change="onBloggerSelectionChange" empty-text="暂无博主，点击上方「添加博主」">
+              <el-table-column type="selection" width="45"></el-table-column>
+              <el-table-column prop="id" label="ID" width="60"></el-table-column>
+              <el-table-column prop="name" label="博主名" min-width="110"></el-table-column>
+              <el-table-column label="状态" width="90">
+                <template #default="{row}">
+                  <el-tag v-if="row.status==='blocked'" type="danger" size="small">已拉黑</el-tag>
+                  <el-tag v-else-if="row.status==='paused'" type="warning" size="small">已暂停</el-tag>
+                  <el-tag v-else type="success" size="small">监控中</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="主页链接" min-width="220" show-overflow-tooltip>
+                <template #default="{row}"><span style="font-size:12px;color:#606266">{{row.url}}</span></template>
+              </el-table-column>
+              <el-table-column label="监控时段" width="130">
+                <template #default="{row}">
+                  <el-tag v-if="!row.monitor_start && !row.monitor_end" size="small" type="info" effect="plain">全天</el-tag>
+                  <el-tag v-else size="small" type="success" effect="plain">{{windowText(row)}}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="baseline_count" label="基线" width="70"></el-table-column>
+              <el-table-column prop="last_crawled_at" label="最近抓取" min-width="150"></el-table-column>
+              <el-table-column label="操作" width="240" fixed="right">
+                <template #default="{row}">
+                  <el-button size="small" link type="primary" @click="refreshBlogger(row)"><el-icon><refresh></refresh></el-icon>抓取</el-button>
+                  <el-button size="small" link type="primary" @click="openBloggerDialog(row)"><el-icon><edit></edit></el-icon>编辑</el-button>
+                  <el-button v-if="row.status!=='blocked'" size="small" link type="warning" @click="toggleBlock(row)">拉黑</el-button>
+                  <el-button v-else size="small" link type="success" @click="toggleBlock(row)">恢复</el-button>
+                  <el-button size="small" link type="danger" @click="deleteBlogger(row)"><el-icon><delete></delete></el-icon>删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 笔记记录 -->
+        <div v-if="activeTab==='notes'">
+          <div class="toolbar">
+            <el-select v-model="noteFilterBloggerId" placeholder="全部博主" clearable style="width:180px" @change="loadNotes">
+              <el-option v-for="b in bloggers" :key="b.id" :label="b.name" :value="b.id"></el-option>
+            </el-select>
+            <el-button @click="loadNotes">刷新</el-button>
+            <div class="spacer"></div>
+            <el-button type="danger" plain @click="deleteSelectedNotes">删除选中</el-button>
+            <el-button type="danger" @click="clearNotes">清空</el-button>
+          </div>
+          <div class="card">
+            <div class="table-scroll">
+            <el-table :data="notes" stripe empty-text="暂无笔记记录" @selection-change="onNoteSelectionChange">
+              <el-table-column type="selection" width="45"></el-table-column>
+              <el-table-column label="封面" width="70">
+                <template #default="{row}">
+                  <el-image :src="row.cover_url" fit="cover" style="width:50px;height:50px;border-radius:6px" lazy>
+                    <template #error><div class="img-error">无</div></template>
+                  </el-image>
+                </template>
+              </el-table-column>
+              <el-table-column prop="title" label="标题" min-width="220" show-overflow-tooltip>
+                <template #default="{row}">{{row.title||'（无标题）'}}</template>
+              </el-table-column>
+              <el-table-column prop="blogger_name" label="博主" min-width="110"></el-table-column>
+              <el-table-column label="发布时间" width="165">
+                <template #default="{row}">{{fmtTime(row.publish_time)}}</template>
+              </el-table-column>
+              <el-table-column prop="liked_count" label="点赞" width="80"></el-table-column>
+              <el-table-column label="链接" width="90" fixed="right">
+                <template #default="{row}"><el-button size="small" link type="primary" @click="copyNote(row.note_url)">复制链接</el-button></template>
+              </el-table-column>
+            </el-table>
+            </div>
+          </div>
+          <div class="stat-line">共 <b>{{notesTotal}}</b> 条笔记</div>
+        </div>
+
+        <!-- 系统设置 -->
+        <div v-if="activeTab==='settings'">
+          <div class="settings-grid">
+            <div class="card">
+              <div class="card-head">修改后台密码</div>
+              <el-form label-width="90px">
+                <el-form-item label="旧密码"><el-input v-model="pwdForm.old" type="password" show-password></el-input></el-form-item>
+                <el-form-item label="新密码"><el-input v-model="pwdForm.newPwd" type="password" show-password placeholder="至少 4 位"></el-input></el-form-item>
+                <el-form-item label="确认新密码"><el-input v-model="pwdForm.confirm" type="password" show-password></el-input></el-form-item>
+                <el-form-item><el-button type="danger" @click="changePassword">保存修改</el-button></el-form-item>
+              </el-form>
+            </div>
+
+            <div class="card">
+              <div class="card-head">监控参数</div>
+              <div class="card-desc">抓取与推送的可调参数，保存后立即生效（无需重启后台）</div>
+              <div class="tunable-grid">
+                <div>
+                  <div class="tunable-label">增量抓取条数</div>
+                  <el-input-number v-model="tunables.crawl_num" :min="1" :max="30"></el-input-number>
+                  <div class="tunable-hint">每次轮询只拉最新 N 条</div>
+                </div>
+                <div>
+                  <div class="tunable-label">首抓条数</div>
+                  <el-input-number v-model="tunables.first_crawl_num" :min="1" :max="30"></el-input-number>
+                  <div class="tunable-hint">添加博主时建基线取 N 条</div>
+                </div>
+                <div>
+                  <div class="tunable-label">并发数</div>
+                  <el-input-number v-model="tunables.max_per_round" :min="0" :max="20"></el-input-number>
+                  <div class="tunable-hint">每轮最多同时抓 N 个博主；设为 0 = 暂停抓取</div>
+                </div>
+                <div>
+                  <div class="tunable-label">推送时效</div>
+                  <el-input-number v-model="tunables.push_max_age_minutes" :min="0" :max="1440"></el-input-number>
+                  <div class="tunable-hint">分钟，0=不限；发布时间超过则不推送</div>
+                </div>
+                <div>
+                  <div class="tunable-label">账号切换间隔</div>
+                  <el-input-number v-model="tunables.account_switch_minutes" :min="1" :max="1440"></el-input-number>
+                  <div class="tunable-hint">分钟；每过这么久切换到下一个健康账号</div>
+                </div>
+                <div>
+                  <div class="tunable-label">抓取间隔</div>
+                  <el-input-number v-model="tunables.crawl_interval_ms" :min="0" :max="60000" :step="100"></el-input-number>
+                  <div class="tunable-hint">毫秒；相邻两个博主的抓取启动错开这么久，0=不间隔</div>
+                </div>
+              </div>
+              <div class="tunable-actions">
+                <el-button type="primary" :loading="savingTunables" @click="saveTunables">保存参数</el-button>
+              </div>
+            </div>
+
+            <div class="card full">
+              <div class="card-head">新笔记推送</div>
+              <div class="card-desc">博主发布新笔记时，自动推送「笔记标题 + 链接」到下方启用的渠道</div>
+              <div class="panel-sub" style="display:flex;align-items:center;gap:12px">
+                <el-switch v-model="notifyConfig.enabled"></el-switch>
+                <span style="font-size:13px;color:#303133">启用推送</span>
+                <span style="font-size:12px;color:#8a919f">关闭后所有渠道均不发送</span>
+              </div>
+              <div class="notify-list">
+                <div v-for="ch in notifyChannels" :key="ch.key" class="notify-item">
+                  <div class="notify-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                    <div style="min-width:0">
+                      <span style="font-weight:600;margin-right:8px">{{ch.name}}</span>
+                      <span style="font-size:12px;color:#8a919f">{{ch.tip}}</span>
+                    </div>
+                    <el-switch v-model="notifyConfig.channels[ch.key].enabled"></el-switch>
+                  </div>
+                  <div v-if="notifyConfig.channels[ch.key].enabled">
+                    <div v-for="f in ch.fields" :key="f.k" style="margin-bottom:10px">
+                      <div style="font-size:13px;color:#606266;margin-bottom:4px">{{f.label}}</div>
+                      <el-input v-if="f.k==='webhook'" v-model="notifyConfig.channels[ch.key][f.k]" type="textarea" :rows="2" :placeholder="f.ph"></el-input>
+                      <el-input v-else v-model="notifyConfig.channels[ch.key][f.k]" :placeholder="f.ph"></el-input>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="notify-actions" style="margin-top:18px;display:flex;gap:10px">
+                <el-button @click="testNotify">发送测试</el-button>
+                <el-button type="danger" @click="saveNotifyConfig">保存配置</el-button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div>
+      </el-main>
+    </el-container>
+  </el-container>
+
+  <!-- 添加设备弹窗 -->
+  <el-dialog v-model="accountDialogVisible" :title="payloadUpdateId ? '更新设备材料' : '添加签名设备'" width="620px"
+             @close="resetAccountDialog">
+    <el-tabs v-if="!payloadUpdateId" v-model="addDeviceTab">
+      <el-tab-pane label="离线生成（推荐）" name="generate">
+        <el-form label-width="80px">
+          <el-form-item label="SSAID"><el-input v-model="genForm.ssaid" placeholder="16 位 hex，留空自动随机"></el-input></el-form-item>
+          <el-form-item label="设备名"><el-input v-model="genForm.name" placeholder="可选，留空默认取随机 UA 机型名"></el-input></el-form-item>
+          <el-form-item label="代理 IP">
+            <div style="display:flex;gap:8px;width:100%">
+              <el-input v-model="genForm.proxy" placeholder="可选：http://user:pass@host:port 或 socks5://host:port" style="flex:1"></el-input>
+              <el-button :loading="newProxyTesting" @click="testProxyNew(genForm.proxy)">测试</el-button>
+            </div>
+          </el-form-item>
+          <div v-if="newProxyTestResult" :style="{fontSize:'12px',marginBottom:'12px',lineHeight:'1.6',color:newProxyTestResult.ok?'#67c23a':'#f56c6c'}">{{newProxyTestResult.text}}</div>
+          <div style="font-size:12px;color:#8a919f;margin-bottom:12px;line-height:1.7">
+            纯本地生成全套签名材料（device_id/did/UA/gid/mua/cp），服务端自动下发 hmac，秒级完成。
+            填了代理则「取 hmac」这一步也走该代理，之后这台设备的所有抓取都走它。
+            生成后为「未登录」状态，需走手机验证码登录。
+          </div>
+        </el-form>
+        <el-button type="danger" style="width:100%" :loading="generating" @click="generateDevice">离线生成设备</el-button>
+      </el-tab-pane>
+      <el-tab-pane label="payload 导入" name="import">
+        <el-form label-width="80px">
+          <el-form-item label="设备名"><el-input v-model="accountForm.name" placeholder="可选，留空自动用昵称/机型名"></el-input></el-form-item>
+          <el-form-item label="代理 IP">
+            <div style="display:flex;gap:8px;width:100%">
+              <el-input v-model="accountForm.proxy" placeholder="可选：http://user:pass@host:port 或 socks5://host:port" style="flex:1"></el-input>
+              <el-button :loading="newProxyTesting" @click="testProxyNew(accountForm.proxy)">测试</el-button>
+            </div>
+          </el-form-item>
+          <div v-if="newProxyTestResult" :style="{fontSize:'12px',marginBottom:'12px',lineHeight:'1.6',color:newProxyTestResult.ok?'#67c23a':'#f56c6c'}">{{newProxyTestResult.text}}</div>
+          <el-form-item label="payload">
+            <el-input v-model="accountForm.payload" type="textarea" :rows="9"
+                      placeholder="粘贴 xhs-console 导出的设备 payload JSON（含 did/hmac/key64/mua0/cp 等字段）"></el-input>
+          </el-form-item>
+          <div style="font-size:12px;color:#8a919f;margin-bottom:12px;line-height:1.7">
+            导入时自动调 user/me 检测登录态与账号信息。
+          </div>
+        </el-form>
+        <el-button type="danger" style="width:100%" :loading="saving" @click="saveAccount">保存并检测</el-button>
+      </el-tab-pane>
+    </el-tabs>
+    <el-form v-else label-width="80px">
+      <el-form-item label="设备名"><el-input v-model="accountForm.name" placeholder="可选"></el-input></el-form-item>
+      <el-form-item label="代理 IP">
+        <div style="display:flex;gap:8px;width:100%">
+          <el-input v-model="accountForm.proxy" placeholder="可选：留空则保持设备原有代理不变" style="flex:1"></el-input>
+          <el-button :loading="newProxyTesting" @click="testProxyNew(accountForm.proxy)">测试</el-button>
+        </div>
+      </el-form-item>
+      <div v-if="newProxyTestResult" :style="{fontSize:'12px',marginBottom:'12px',lineHeight:'1.6',color:newProxyTestResult.ok?'#67c23a':'#f56c6c'}">{{newProxyTestResult.text}}</div>
+      <el-form-item label="payload">
+        <el-input v-model="accountForm.payload" type="textarea" :rows="10"
+                  placeholder="粘贴新的设备 payload JSON，校验通过后替换"></el-input>
+      </el-form-item>
+    </el-form>
+    <el-button v-if="payloadUpdateId" type="danger" style="width:100%" :loading="saving" @click="saveAccount">保存并检测</el-button>
+  </el-dialog>
+
+<!-- 设备登录弹窗 -->
+  <el-dialog v-model="loginDialogVisible" title="设备登录 / 注册（手机验证码）" width="520px" @close="resetLoginDialog">
+    <el-alert type="info" :closable="false" show-icon style="margin-bottom:14px">
+      <template #title>{{ loginDeviceInfo }}</template>
+      <div style="font-size:12px;line-height:1.7">新号自动注册，老号直接登录。登录成功后登录态自动写回设备。</div>
+      <div style="font-size:12px;line-height:1.7;color:#e6a23c">提示：登录 / 发验证码走<b>已配置代理</b>。若请求成功但收不到短信，多为代理 IP 被小红书风控（数据中心 IP 常见），建议换住宅代理后重试。</div>
+    </el-alert>
+    <el-form label-width="80px">
+      <el-form-item label="手机号">
+        <div style="display:flex;gap:8px;width:100%">
+          <el-select v-model="loginForm.zone" style="width:110px">
+            <el-option label="+86 大陆" value="86"></el-option>
+            <el-option label="+852 香港" value="852"></el-option>
+            <el-option label="+853 澳门" value="853"></el-option>
+            <el-option label="+886 台湾" value="886"></el-option>
+            <el-option label="+1 美国" value="1"></el-option>
+            <el-option label="+44 英国" value="44"></el-option>
+            <el-option label="+65 新加坡" value="65"></el-option>
+            <el-option label="+60 马来" value="60"></el-option>
+            <el-option label="+81 日本" value="81"></el-option>
+            <el-option label="+82 韩国" value="82"></el-option>
+            <el-option label="+66 泰国" value="66"></el-option>
+            <el-option label="+84 越南" value="84"></el-option>
+            <el-option label="+62 印尼" value="62"></el-option>
+            <el-option label="+63 菲律宾" value="63"></el-option>
+          </el-select>
+          <el-input v-model="loginForm.phone" placeholder="手机号（不含区号）" maxlength="20" style="flex:1"></el-input>
+        </div>
+      </el-form-item>
+      <el-form-item label="验证码">
+        <div style="display:flex;gap:8px;width:100%">
+          <el-input v-model="loginForm.code" placeholder="短信验证码" style="flex:1"></el-input>
+          <el-button :disabled="loginCountdown > 0" :loading="loginSending" @click="sendLoginCode">
+            {{ loginCountdown > 0 ? loginCountdown + 's' : '发送验证码' }}
+          </el-button>
+        </div>
+      </el-form-item>
+    </el-form>
+    <div v-if="loginNeedCaptcha && loginCaptcha" style="border:1px solid #ebeef5;border-radius:8px;padding:12px;margin-bottom:12px">
+      <div style="font-size:13px;margin-bottom:8px">图形验证：{{ loginCaptchaTheme }}（点击图中 {{ loginCaptchaPickCount }} 张指定图片）</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <img v-for="(pic, i) in loginCaptchaPics" :key="i" :src="pic.url || pic"
+             @click="toggleCaptchaPick(i)"
+             :style="{width:'100%',borderRadius:'6px',cursor:'pointer',border: loginCaptchaPicked.includes(i) ? '2px solid #f56c6c' : '2px solid transparent'}">
+      </div>
+    </div>
+    <template #footer>
+      <el-button @click="loginDialogVisible=false">取消</el-button>
+      <el-button type="danger" :loading="loginSubmitting" @click="submitLogin">登 录</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 编辑设备弹窗 -->
+  <el-dialog v-model="editDialogVisible" title="编辑设备" width="600px">
+    <el-form label-width="80px">
+      <el-form-item label="设备名">
+        <el-input v-model="editForm.name" placeholder="即机型标识，如：RMX3042 / 小米23127"></el-input>
+        <div style="font-size:12px;color:#8a919f;margin-top:4px">设备名即机型，显示在「设备」列；小红书账号名由登录自动识别，无需填写</div>
+      </el-form-item>
+      <el-form-item label="账号名">
+        <el-input :model-value="editForm.nickname" disabled>
+          <template #suffix><span style="font-size:12px;color:#c0c4cc">登录/检测自动识别</span></template>
+        </el-input>
+      </el-form-item>
+      <el-form-item label="状态">
+        <el-select v-model="editForm.status" style="width:100%">
+          <el-option label="正常" value="active"></el-option>
+          <el-option label="已暂停" value="paused"></el-option>
+          <el-option label="登录过期" value="expired"></el-option>
+          <el-option label="被踢下线" value="kicked"></el-option>
+          <el-option label="风控异常" value="anomaly"></el-option>
+          <el-option label="未知" value="unknown"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="代理 IP">
+        <div style="width:100%">
+          <div style="display:flex;gap:8px;width:100%">
+            <el-input v-model="editForm.proxy" placeholder="http://user:pass@host:port 或 socks5://host:port" style="flex:1" clearable
+                      @keyup.enter="testProxy"></el-input>
+            <el-button type="primary" plain :loading="proxyTesting" :disabled="!editForm.proxy.trim()" @click="testProxy">
+              {{ proxyTesting ? '测试中…' : '测试代理' }}
+            </el-button>
+          </div>
+          <div style="font-size:12px;color:#8a919f;margin-top:5px;line-height:1.6">留空 = 直连（保存后清除代理）。测试可先验证连通性，再决定是否保存。</div>
+          <div v-if="proxyTestResult" style="font-size:12px;margin-top:6px;width:100%;line-height:1.6"
+               :style="{color: proxyTestResult.ok ? '#67c23a' : '#f56c6c'}">
+            {{ proxyTestResult.text }}
+          </div>
+        </div>
+      </el-form-item>
+      <el-collapse>
+        <el-collapse-item title="payload 高级编辑（签名材料，一般不用动）">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:12px;color:#8a919f">当前设备 payload 已载入下方，可直接修改；保存时整体替换</span>
+            <el-button size="small" link type="primary" @click="resetPayloadEdit">还原</el-button>
+          </div>
+          <el-input v-model="editForm.payload" type="textarea" :rows="14" spellcheck="false"
+                    style="font-family:Consolas,Monaco,monospace;font-size:12px"
+                    placeholder="留空则不修改现有 payload；填写则整体替换（JSON）"></el-input>
+          <div style="font-size:12px;color:#8a919f;margin-top:6px;line-height:1.7">
+            代理保存时会自动合并进 payload 的 proxy 字段，无需在此手动改。改动 did/hmac/mua0 等关键字段会使设备失效，请谨慎。
+          </div>
+        </el-collapse-item>
+      </el-collapse>
+    </el-form>
+    <template #footer>
+      <el-button @click="editDialogVisible=false">取消</el-button>
+      <el-button type="primary" :loading="saving" @click="saveEdit">保存</el-button>
+    </template>
+  </el-dialog>
+
+<!-- 导入关注列表弹窗 -->
+  <el-dialog v-model="followImportVisible" title="导入关注列表" width="680px">
+    <div class="row" style="align-items:center;margin-bottom:12px">
+      <el-select v-model="followImportDeviceId" placeholder="选择要导入的设备" style="width:280px">
+        <el-option v-for="d in accounts" :key="d.id"
+                   :label="(d.name || d.label || ('设备#'+d.id)) + (d.nickname ? ' · ' + d.nickname : '') + (d.status === 'active' ? '' : '（' + statusText(d.status) + '）')"
+                   :value="d.id"></el-option>
+      </el-select>
+      <el-button type="danger" :loading="followLoading" @click="fetchFollowings">获取关注列表</el-button>
+      <div style="flex:1"></div>
+      <el-switch v-model="followImportWindowOn" active-text="限制监控时段"></el-switch>
+    </div>
+    <div v-if="followImportWindowOn" class="row" style="margin-bottom:12px">
+      <el-time-picker v-model="followImportStart" value-format="HH:mm" format="HH:mm" placeholder="开始" style="width:115px"></el-time-picker>
+      <span style="color:#8a919f;margin:0 6px">—</span>
+      <el-time-picker v-model="followImportEnd" value-format="HH:mm" format="HH:mm" placeholder="结束" style="width:115px"></el-time-picker>
+    </div>
+    <el-table :data="followItems" max-height="420" stripe @selection-change="onFollowSelectionChange" v-loading="followLoading"
+              empty-text="先选设备再点「获取关注列表」">
+      <el-table-column type="selection" width="45" :selectable="canSelectRow"></el-table-column>
+      <el-table-column prop="nickname" label="昵称" min-width="140"></el-table-column>
+      <el-table-column prop="user_id" label="user_id" min-width="200" show-overflow-tooltip></el-table-column>
+      <el-table-column label="状态" width="100">
+        <template #default="{row}">
+          <el-tag v-if="row.blocked" type="danger" size="small">已拉黑</el-tag>
+          <el-tag v-else-if="row.already" type="info" size="small">已添加</el-tag>
+          <el-tag v-else type="success" size="small">可导入</el-tag>
+        </template>
+      </el-table-column>
+    </el-table>
+    <template #footer>
+      <span style="float:left;font-size:12px;color:#8a919f">已选 {{followSelection.length}} / {{followItems.length}}</span>
+      <el-button @click="followImportVisible=false">取消</el-button>
+      <el-button type="primary" :disabled="!followSelection.length" @click="importFollowings">导入选中</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 添加/编辑博主弹窗 -->
+  <el-dialog v-model="bloggerDialogVisible" :title="bloggerEditId?'编辑博主':'添加博主'" width="540px">
+    <el-form label-width="100px">
+      <el-form-item v-if="bloggerEditId" label="博主名"><el-input v-model="bloggerForm.name"></el-input></el-form-item>
+      <div v-else style="font-size:12px;color:#8a919f;margin-bottom:16px">博主名将在保存后自动获取</div>
+      <el-form-item label="主页链接"><el-input v-model="bloggerForm.url" placeholder="https://www.xiaohongshu.com/user/profile/xxx"></el-input></el-form-item>
+      <el-form-item label="监控时段">
+        <div class="time-range">
+          <el-switch v-model="bloggerForm.windowOn"></el-switch>
+          <span v-if="bloggerForm.windowOn" class="time-range-inputs">
+            <el-time-picker
+              v-model="bloggerForm.monitor_start"
+              value-format="HH:mm" format="HH:mm" placeholder="开始"
+              style="width:120px"></el-time-picker>
+            <span style="color:#8a919f;margin:0 6px">—</span>
+            <el-time-picker
+              v-model="bloggerForm.monitor_end"
+              value-format="HH:mm" format="HH:mm" placeholder="结束"
+              style="width:120px"></el-time-picker>
+          </span>
+          <span v-else style="font-size:12px;color:#8a919f">关闭时全天监控</span>
+        </div>
+        <div class="time-hint">仅在时段内抓取；结束早于开始视为跨天（如 22:00—06:00）</div>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="bloggerDialogVisible=false">取消</el-button>
+      <el-button type="danger" :loading="saving" @click="saveBlogger">保存</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 导入关注列表弹窗 -->
+  
+
+  <!-- 批量修改弹窗 -->
+  <el-dialog v-model="batchDialogVisible" title="批量修改" width="460px">
+    <el-form label-width="100px">
+      <el-form-item label="监控时段">
+        <el-radio-group v-model="batchForm.windowMode" size="small">
+          <el-radio-button label="keep">不修改</el-radio-button>
+          <el-radio-button label="set">设置为</el-radio-button>
+          <el-radio-button label="clear">全天</el-radio-button>
+        </el-radio-group>
+        <div v-if="batchForm.windowMode==='set'" class="time-range" style="margin-top:10px">
+          <el-time-picker v-model="batchForm.monitor_start" value-format="HH:mm" format="HH:mm" placeholder="开始" style="width:120px"></el-time-picker>
+          <span style="color:#8a919f">—</span>
+          <el-time-picker v-model="batchForm.monitor_end" value-format="HH:mm" format="HH:mm" placeholder="结束" style="width:120px"></el-time-picker>
+        </div>
+      </el-form-item>
+    </el-form>
+    <div style="font-size:12px;color:#8a919f">将应用到选中的 {{bloggerSelection.length}} 个博主</div>
+    <template #footer>
+      <el-button @click="batchDialogVisible=false">取消</el-button>
+      <el-button type="danger" @click="saveBatch">应用修改</el-button>
+    </template>
+  </el-dialog>
+</div>
+
+<script src="https://registry.npmmirror.com/vue/3.5.13/files/dist/vue.global.prod.js"></script>
+<script src="https://registry.npmmirror.com/element-plus/2.9.1/files/dist/index.full.min.js"></script>
+<script src="https://registry.npmmirror.com/@element-plus/icons-vue/2.3.1/files/dist/index.iife.min.js"></script>
+<script src="https://registry.npmmirror.com/element-plus/2.9.1/files/dist/locale/zh-cn.min.js"></script>
+<script>
+const { ElMessage, ElMessageBox } = ElementPlus;
+const TOKEN_KEY = 'xhs_admin_token';
+
+const app = Vue.createApp({
+  data() {
+    return {
+      token: localStorage.getItem(TOKEN_KEY) || '',
+      loginPwd: '',
+      logging: false,
+      activeTab: 'accounts',
+      sidebarCollapse: false,
+      sidebarOpen: false,   // 手机端抽屉是否展开
+      isMobile: false,      // 当前是否窄屏（<768px）
+      // 设备
+      accounts: [],
+      deviceKeyword: '',
+      accountsLoading: false,
+      bulkChecking: false,
+      accountDialogVisible: false,
+      payloadUpdateId: null,
+      addDeviceTab: 'generate',
+      genForm: { ssaid: '', name: '', proxy: '' },
+      newProxyTesting: false,
+      newProxyTestResult: null,
+      generating: false,
+      // 设备登录
+      loginDialogVisible: false,
+      loginDeviceId: null,
+      loginDeviceInfo: '',
+      loginForm: { phone: '', code: '', zone: '86' },
+      loginSending: false,
+      loginSubmitting: false,
+      loginCountdown: 0,
+      loginNeedCaptcha: false,
+      loginCaptcha: null,
+      loginCaptchaPics: [],
+      loginCaptchaTheme: '',
+      loginCaptchaPickCount: 2,
+      loginCaptchaPicked: [],
+      accountForm: { name: '', payload: '', proxy: '' },
+      editDialogVisible: false,
+      editId: null,
+      editForm: { name: '', nickname: '', status: 'active', payload: '', proxy: '' },
+      proxyTesting: false,
+      proxyTestResult: null,
+      // 博主
+      bloggers: [],
+      bloggerKeyword: '',
+      bloggerDialogVisible: false,
+      bloggerEditId: null,
+      bloggerForm: { name: '', url: '', windowOn: false, monitor_start: '', monitor_end: '' },
+      bloggerSelection: [],
+      batchDialogVisible: false,
+      followImportVisible: false,
+      followImportDeviceId: null,
+      followItems: [],
+      followSelection: [],
+      followLoading: false,
+      followImportWindowOn: false,
+      followImportStart: '',
+      followImportEnd: '',
+      batchForm: { windowMode: 'keep', monitor_start: '', monitor_end: '' },
+      // 笔记
+      notes: [],
+      notesTotal: 0,
+      noteFilterBloggerId: null,
+      noteSelection: [],
+      // 设置
+      pwdForm: { old: '', newPwd: '', confirm: '' },
+      saving: false,
+      notifyChannels: [
+        { key:'serverchan', name:'Server酱（微信）', tip:'sct.ftqq.com 获取 SendKey', fields:[{k:'sendkey', label:'SendKey', ph:'SCT 开头的 key'}] },
+        { key:'pushplus', name:'PushPlus（微信）', tip:'pushplus.plus 获取 Token', fields:[{k:'token', label:'Token', ph:'Token'}] },
+        { key:'wecom', name:'企业微信机器人', tip:'群聊添加机器人获取 Webhook', fields:[{k:'webhook', label:'Webhook 地址', ph:'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...'}] },
+        { key:'dingtalk', name:'钉钉机器人', tip:'群设置添加机器人，安全设置选「加签」', fields:[{k:'webhook', label:'Webhook 地址', ph:'https://oapi.dingtalk.com/robot/send?access_token=...'},{k:'secret', label:'加签 Secret（可选）', ph:'SEC 开头'}] },
+        { key:'feishu', name:'飞书机器人', tip:'群设置添加自定义机器人', fields:[{k:'webhook', label:'Webhook 地址', ph:'https://open.feishu.cn/open-apis/bot/v2/hook/...'}] },
+      ],
+      notifyConfig: {
+        enabled: false,
+        channels: {
+          serverchan: { enabled:false, sendkey:'' },
+          pushplus: { enabled:false, token:'' },
+          wecom: { enabled:false, webhook:'' },
+          dingtalk: { enabled:false, webhook:'', secret:'' },
+          feishu: { enabled:false, webhook:'' },
+        }
+      },
+      // 监控可调参数（后台设置页，落库 Setting 表，改后立即生效）
+      tunables: { crawl_num: 5, first_crawl_num: 1, max_per_round: 4, push_max_age_minutes: 30, account_switch_minutes: 10, crawl_interval_ms: 0 },
+      savingTunables: false,
+    };
+  },
+  computed: {
+    pageTitle() {
+      return { accounts:'账号管理', bloggers:'博主监控', notes:'笔记记录', settings:'系统设置' }[this.activeTab] || '';
+    },
+    filteredBloggers() {
+      const k = (this.bloggerKeyword || '').trim().toLowerCase();
+      if (!k) return this.bloggers;
+      return this.bloggers.filter(b => {
+        return (b.name || '').toLowerCase().includes(k)
+          || String(b.id).includes(k)
+          || (b.xhs_user_id || '').toLowerCase().includes(k)
+          || (b.url || '').toLowerCase().includes(k);
+      });
+    },
+    filteredAccounts() {
+      const k = (this.deviceKeyword || '').trim().toLowerCase();
+      if (!k) return this.accounts;
+      return this.accounts.filter(a => {
+        return (a.name || '').toLowerCase().includes(k)
+          || (a.nickname || '').toLowerCase().includes(k)
+          || String(a.id).includes(k)
+          || (a.label || '').toLowerCase().includes(k)
+          || this.maskProxy(a.payload).toLowerCase().includes(k);
+      });
+    },
+    acctStats() {
+      const s = { total: this.accounts.length, active: 0, pending: 0, bad: 0, proxied: 0 };
+      for (const a of this.accounts) {
+        const st = a.status;
+        if (st === 'active') s.active++;
+        else if (st === 'kicked' || st === 'anomaly' || st === 'rate_limited') s.bad++;
+        else s.pending++;   // expired / unknown / paused 等 → 待处理
+        if (this.hasProxy(a)) s.proxied++;
+      }
+      return s;
+    },
+  },
+  mounted() {
+    if (this.token) this.checkAuth();
+    this.onResize();
+    window.addEventListener('resize', this.onResize);
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.onResize);
+
+    this.stopFrameStream();
+  },
+  methods: {
+    async api(path, method='GET', body) {
+      const opt = { method, headers: {} };
+      if (this.token) opt.headers['Authorization'] = 'Bearer ' + this.token;
+      if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+      let r;
+      try { r = await fetch(path, opt); }
+      catch (e) { ElMessage.error('网络请求失败：' + ((e && e.message) || e)); throw e; }
+      if (r.status === 401) {
+        this.token = ''; localStorage.removeItem(TOKEN_KEY);
+        ElMessage.error('登录已失效，请重新登录');
+        throw new Error('unauth');
+      }
+      // 后端 500 时返回的是纯文本（Internal Server Error），直接 r.json() 会抛
+      // SyntaxError 把真实状态码吞掉；这里统一先取文本再解析，解析失败也能报出 HTTP 码。
+      const text = await r.text();
+      try { return JSON.parse(text); }
+      catch (e) {
+        ElMessage.error('服务异常（HTTP ' + r.status + '）：' + String(text).slice(0, 120));
+        throw new Error('bad-response');
+      }
+    },
+    async doLogin() {
+      if (!this.loginPwd) { ElMessage.warning('请输入密码'); return; }
+      this.logging = true;
+      try {
+        const d = await this.api('/api/auth/login', 'POST', { password: this.loginPwd });
+        if (d.token) { this.token = d.token; localStorage.setItem(TOKEN_KEY, d.token); this.loginPwd=''; this.initApp(); }
+        else ElMessage.error(d.detail || '登录失败');
+      } catch(e) { if (e.message!=='unauth') ElMessage.error('登录失败'); }
+      finally { this.logging = false; }
+    },
+    async doLogout() {
+      try { await this.api('/api/auth/logout', 'POST'); } catch(e) {}
+      this.token = ''; localStorage.removeItem(TOKEN_KEY);
+    },
+    async checkAuth() {
+      try { const s = await this.api('/api/auth/status'); if (s.authed) { this.initApp(); return; } } catch(e) {}
+      this.token = ''; localStorage.removeItem(TOKEN_KEY);
+    },
+    async initApp() {
+      await Promise.all([this.loadAccounts(), this.loadBloggers()]);
+      await this.loadNotes();
+    },
+    /* 响应式：窗口尺寸变化时同步断点状态 */
+    onResize() {
+      const mobile = window.innerWidth < 768;
+      if (mobile !== this.isMobile) {
+        this.isMobile = mobile;
+        // 进入手机模式：侧边栏收起为抽屉；回到桌面：恢复展开
+        this.sidebarOpen = false;
+        this.sidebarCollapse = mobile;
+      }
+    },
+    switchTab(name) {
+      this.activeTab = name;
+      if (this.isMobile) this.sidebarOpen = false;  // 手机端点完自动收起抽屉
+      if (name==='notes') this.loadNotes();
+      if (name==='settings') { this.loadNotifyConfig(); this.loadTunables(); }
+    },
+
+    /* 账号 */
+    async loadAccounts() { const d = await this.api('/api/devices'); this.accounts = d.items || []; },
+    async refreshAccounts() {
+      this.accountsLoading = true;
+      try { await this.loadAccounts(); ElMessage.success('列表已刷新'); }
+      finally { this.accountsLoading = false; }
+    },
+    async checkAllAccounts() {
+      if (this.bulkChecking) return;
+      this.bulkChecking = true;
+      let ok = 0, bad = 0;
+      try {
+        for (const a of this.accounts) {
+          try {
+            const d = await this.api('/api/devices/' + a.id + '/check', 'POST');
+            if (d.ok) ok++; else bad++;
+          } catch (e) { bad++; }
+        }
+        ElMessage.success(`全部检测完成：正常 ${ok} 台，异常/失效 ${bad} 台`);
+      } finally {
+        this.bulkChecking = false;
+        this.loadAccounts();
+      }
+    },
+    openAccountDialog() {
+      this.payloadUpdateId = null;
+      this.addDeviceTab = 'generate';
+      this.accountDialogVisible = true;
+    },
+    resetAccountDialog() {
+      this.accountForm = { name: '', payload: '', proxy: '' };
+      this.genForm = { ssaid: '', name: '', proxy: '' };
+      this.payloadUpdateId = null;
+      this.newProxyTesting = false;
+      this.newProxyTestResult = null;
+    },
+    async generateDevice() {
+      const ssaid = this.genForm.ssaid.trim();
+      if (ssaid && !/^[0-9a-f]{16}$/.test(ssaid)) { ElMessage.warning('SSAID 需为 16 位小写 hex'); return; }
+      const proxy = this.genForm.proxy.trim();
+      if (proxy && !/^(https?|socks5):\/\//.test(proxy)) { ElMessage.warning('代理格式不合法（须 http:// 或 socks5:// 开头）'); return; }
+      this.generating = true;
+      try {
+        const d = await this.api('/api/devices', 'POST', {
+          mode: 'generate', ssaid: ssaid || '', name: this.genForm.name.trim(), proxy,
+        });
+        if (d.ok) {
+          const g = d.generate || {};
+          ElMessage.success('生成成功：' + (g.model || d.item.label || d.item.name) + '（未登录，待走登录链路）');
+          this.accountDialogVisible = false;
+          this.loadAccounts();
+        } else {
+          ElMessage.error(d.error || '生成失败');
+        }
+      } catch (e) { ElMessage.error('生成失败：' + e); }
+      finally { this.generating = false; }
+    },
+    /* 添加设备时的代理连通性预检（设备尚未创建，走不依赖设备的接口） */
+    async testProxyNew(proxy) {
+      const p = (proxy || '').trim();
+      if (!p) { ElMessage.warning('请先填写代理地址'); return; }
+      if (!/^(https?|socks5):\/\//.test(p)) { ElMessage.warning('代理须以 http:// 或 socks5:// 开头'); return; }
+      this.newProxyTesting = true;
+      this.newProxyTestResult = null;
+      try {
+        const d = await this.api('/api/proxy/test', 'POST', { proxy: p });
+        if (d.ok) {
+          let text = '✓ 代理可用 · 出口 IP ' + d.exit_ip + ' · 延迟 ' + d.latency_ms + 'ms';
+          if (d.ip_changed) text += ' · 已走代理（直连 ' + d.direct_ip + '）';
+          else if (d.direct_ip) text += ' · ⚠ 与直连 IP 相同，代理可能未生效';
+          this.newProxyTestResult = { ok: true, text };
+        } else {
+          this.newProxyTestResult = { ok: false, text: d.error || '代理不通' };
+        }
+      } catch (e) {
+        this.newProxyTestResult = { ok: false, text: '测试失败：' + ((e && e.message) || e) };
+      } finally { this.newProxyTesting = false; }
+    },
+    async saveAccount() {
+      if (!this.accountForm.payload.trim()) { ElMessage.warning('请粘贴设备 payload JSON'); return; }
+      const proxy = this.accountForm.proxy.trim();
+      if (proxy && !/^(https?|socks5):\/\//.test(proxy)) { ElMessage.warning('代理格式不合法（须 http:// 或 socks5:// 开头）'); return; }
+      this.saving = true;
+      try {
+        let payload;
+        try { payload = JSON.parse(this.accountForm.payload); }
+        catch (e) { ElMessage.error('payload 不是合法 JSON：' + e.message); return; }
+        const body = { name: this.accountForm.name, payload: JSON.stringify(payload), proxy };
+        const d = await this.api('/api/devices', 'POST', body);
+        if (d.ok) { this.accountDialogVisible = false; this.accountForm = { name:'', payload:'', proxy:'' }; ElMessage.success('设备添加成功：' + (d.item.nickname || d.item.name)); this.loadAccounts(); }
+        else ElMessage.error('设备校验未通过：' + (d.error || ''));
+      } finally { this.saving = false; }
+    },
+    openDeviceDialog() {
+      this.payloadUpdateId = null;
+      this.accountForm = { name: '', payload: '', proxy: '' };
+      this.genForm = { ssaid: '', name: '', proxy: '' };
+      this.newProxyTesting = false;
+      this.newProxyTestResult = null;
+      this.accountDialogVisible = true;
+    },
+    openEdit(row) {
+      this.editId = row.id;
+      const payload = this.parsePayload(row.payload);
+      this._origPayloadStr = payload && Object.keys(payload).length ? JSON.stringify(payload, null, 2) : '';
+      // 设备名 = 机型（同一个字段，编辑 name 即改机型展示）；账号名只读（登录/检测自动回写）
+      this.editForm = {
+        name: row.name || row.label || '',
+        nickname: row.nickname || '',
+        status: row.status,
+        payload: this._origPayloadStr,
+        proxy: (payload && payload.proxy) || '',
+      };
+      this.proxyTestResult = null;
+      this.editDialogVisible = true;
+    },
+    resetPayloadEdit() {
+      this.editForm.payload = this._origPayloadStr || '';
+      ElMessage.info('payload 已还原为打开时的内容');
+    },
+    async saveEdit() {
+      if (!this.editForm.name.trim()) { ElMessage.warning('设备名不能为空'); return; }
+      const proxy = this.editForm.proxy.trim();
+      if (proxy && !/^(https?|socks5):\/\//.test(proxy)) { ElMessage.warning('代理格式不合法（须 http:// 或 socks5:// 开头）'); return; }
+      this.saving = true;
+      try {
+        const body = {
+          name: this.editForm.name.trim(),   // 设备名 = 机型
+          label: this.editForm.name.trim(),  // 保持 label 与 name 同步（机型列展示用）
+          status: this.editForm.status,
+          proxy: proxy,   // 后端合并进 payload，不触发设备检测；空串=清除代理
+        };
+        if (this.editForm.payload.trim()) {
+          try { JSON.parse(this.editForm.payload); }
+          catch (e) { ElMessage.error('payload 不是合法 JSON：' + e.message); return; }
+          // payload 手改时若删/改了 proxy 字段，以代理输入框为准回填，避免两处打架
+          try {
+            const pj = JSON.parse(this.editForm.payload);
+            if (proxy) pj.proxy = proxy;
+            else pj.proxy !== undefined && delete pj.proxy;
+            body.payload = JSON.stringify(pj);
+          } catch (e2) { body.payload = this.editForm.payload.trim(); }
+        }
+        const d = await this.api('/api/devices/' + this.editId, 'PUT', body);
+        if (d.ok) { this.editDialogVisible = false; ElMessage.success('已保存'); this.loadAccounts(); }
+        else ElMessage.error('保存失败：' + (d.error || ''));
+      } finally { this.saving = false; }
+    },
+    async testProxy() {
+      const proxy = this.editForm.proxy.trim();
+      if (!proxy) { ElMessage.warning('请先填写代理地址'); return; }
+      if (!/^(https?|socks5):\/\//.test(proxy)) { ElMessage.warning('代理须以 http:// 或 socks5:// 开头'); return; }
+      this.proxyTesting = true;
+      this.proxyTestResult = null;
+      try {
+        const d = await this.api('/api/devices/' + this.editId + '/proxy_test', 'POST', { proxy });
+        if (d.ok) {
+          let text = '✓ 代理可用 · 出口 IP ' + d.exit_ip + ' · 延迟 ' + d.latency_ms + 'ms';
+          if (d.ip_changed) text += ' · 已走代理（直连 ' + d.direct_ip + '）';
+          else if (d.direct_ip) text += ' · ⚠ 与直连 IP 相同，代理可能未生效';
+          this.proxyTestResult = { ok: true, text };
+        } else {
+          this.proxyTestResult = { ok: false, text: d.error || '代理不通' };
+        }
+      } catch (e) {
+        this.proxyTestResult = { ok: false, text: '测试失败：' + (e && e.message ? e.message : e) };
+      } finally { this.proxyTesting = false; }
+    },
+    maskProxy(p) {
+      const payload = this.parsePayload(p);
+      const proxy = (payload && payload.proxy) || '';
+      if (!proxy) return '';
+      // 藏掉凭据：http://user:pass@host:port → http://***@host:port；无凭据原样展示
+      return proxy.replace(/^(\w+):\/\/([^@\/\s]*@)/, (m0, sch) => sch + '://***@');
+    },
+    parsePayload(p) {
+      if (!p) return {};
+      if (typeof p === 'object') return p;
+      try { return JSON.parse(p) || {}; } catch (e) { return {}; }
+    },
+    hasProxy(row) {
+      const payload = this.parsePayload(row.payload);
+      return !!(payload && payload.proxy);
+    },
+    /* 设备登录 */
+    openLogin(row) {
+      this.loginDeviceId = row.id;
+      this.loginDeviceInfo = '目标设备：' + (row.name || row.label || ('#' + row.id)) + (row.nickname ? '（当前登录：' + row.nickname + '）' : '（未登录）');
+      const payload = this.parsePayload(row.payload);
+      const lastPhone = (payload && payload.login_phone) || '';
+      this.loginForm = { phone: lastPhone, code: '', zone: (payload && payload.login_zone) || '86' };
+      this.loginNeedCaptcha = false; this.loginCaptcha = null; this.loginCaptchaPicked = [];
+      this.loginDialogVisible = true;
+    },
+    resetLoginDialog() {
+      this.loginForm = { phone: '', code: '', zone: '86' };
+      this.loginNeedCaptcha = false; this.loginCaptcha = null; this.loginCaptchaPicked = [];
+      this.loginCountdown = 0;
+    },
+    async sendLoginCode() {
+      const phone = this.loginForm.phone.trim();
+      const zone = this.loginForm.zone || '86';
+      // 大陆号 11 位 1 开头；国际号 4~15 位纯数字（去掉 + 前缀和空格）
+      const cleaned = phone.replace(/^\+/, '').replace(/[\s-]/g, '');
+      if (zone === '86') {
+        if (!/^1\d{10}$/.test(cleaned)) { ElMessage.warning('请输入正确的 11 位大陆手机号'); return; }
+      } else if (!/^\d{4,15}$/.test(cleaned)) {
+        ElMessage.warning('请输入正确的国际手机号（4~15 位数字，不含区号）'); return;
+      }
+      this.loginSending = true;
+      try {
+        const body = { phone: cleaned, zone, type: 'login' };
+        if (this.loginNeedCaptcha && this.loginCaptcha) body.captcha = this.buildCaptchaAnswer();
+        const d = await this.api('/api/devices/' + this.loginDeviceId + '/login/send_code', 'POST', body);
+        if (d.ok) {
+          ElMessage.success('验证码已发送（+' + zone + ' ' + cleaned + '）');
+          this.loginCountdown = 60;
+          const t = setInterval(() => { this.loginCountdown--; if (this.loginCountdown <= 0) clearInterval(t); }, 1000);
+        } else if (d.need_captcha) {
+          this.showCaptcha(d.captcha);
+          ElMessage.warning('需要图形验证，完成后重新发送');
+        } else {
+          let msg = d.error || '发送失败';
+          if ((d.body && d.body.code === -13002) || /-13002/.test(msg)) {
+            msg += '。国际号码发送失败常见于：该设备/网络环境被限制向境外号码发码，可更换设备或网络后重试。';
+          }
+          ElMessage.error({ message: msg, duration: 6000, showClose: true });
+        }
+      } finally { this.loginSending = false; }
+    },
+    showCaptcha(captcha) {
+      this.loginNeedCaptcha = true;
+      this.loginCaptcha = captcha;
+      const data = captcha && captcha.data ? captcha.data : captcha;
+      const ci = (data && (data.captcha_info || data)) || {};
+      this.loginCaptchaPics = ci.picList || [];
+      this.loginCaptchaTheme = ci.theme || '';
+      this.loginCaptchaPickCount = (ci.prompt && ci.prompt.count) || 2;
+      this.loginCaptchaPicked = [];
+    },
+    toggleCaptchaPick(i) {
+      const idx = this.loginCaptchaPicked.indexOf(i);
+      if (idx >= 0) this.loginCaptchaPicked.splice(idx, 1);
+      else if (this.loginCaptchaPicked.length < this.loginCaptchaPickCount) this.loginCaptchaPicked.push(i);
+    },
+    buildCaptchaAnswer() {
+      // 从 captcha 原始结构透传 + selectListSeq（按下标顺序）
+      const c = this.loginCaptcha || {};
+      const data = c.data || c;
+      const answer = { ...data };
+      answer.selectListSeq = this.loginCaptchaPicked.join(',');
+      return answer;
+    },
+    async submitLogin() {
+      const phone = this.loginForm.phone.trim();
+      const zone = this.loginForm.zone || '86';
+      const code = this.loginForm.code.trim();
+      const cleaned = phone.replace(/^\+/, '').replace(/[\s-]/g, '');
+      if (zone === '86') {
+        if (!/^1\d{10}$/.test(cleaned)) { ElMessage.warning('请输入正确的 11 位大陆手机号'); return; }
+      } else if (!/^\d{4,15}$/.test(cleaned)) {
+        ElMessage.warning('请输入正确的国际手机号（4~15 位数字，不含区号）'); return;
+      }
+      if (!code) { ElMessage.warning('请输入短信验证码'); return; }
+      this.loginSubmitting = true;
+      try {
+        const body = { phone: cleaned, zone, code, type: 'login' };
+        if (this.loginNeedCaptcha && this.loginCaptcha) body.captcha = this.buildCaptchaAnswer();
+        const d = await this.api('/api/devices/' + this.loginDeviceId + '/login/submit', 'POST', body);
+        if (d.ok) {
+          ElMessage.success('登录成功：' + (d.nickname || '') + '（' + (d.exists ? '老号登录' : '新号注册') + '）');
+          this.loginDialogVisible = false;
+          this.loadAccounts();
+        } else if (d.need_captcha) {
+          this.showCaptcha(d.captcha);
+          ElMessage.warning('需要图形验证，重选后再次点登录');
+        } else if (d.body) {
+          // 透传上游原始响应，便于诊断「成功(code 0)但未登录」的真实原因（token/session 是否下发、字段结构）
+          ElMessageBox.alert('<pre style="max-height:320px;overflow:auto;font-size:12px;white-space:pre-wrap;word-break:break-all;margin:0">' + JSON.stringify(d.body, null, 2) + '</pre>', d.error || '登录失败', { dangerouslyUseHTMLString: true, confirmButtonText: '知道了' });
+        } else {
+          ElMessage.error(d.error || '登录失败');
+        }
+      } finally { this.loginSubmitting = false; }
+    },
+    async checkAccount(row) {
+      const d = await this.api('/api/devices/' + row.id + '/check', 'POST');
+      if (!d.ok) ElMessage.error('设备异常（' + (d.account_status||'?') + '）：' + (d.error || ''));
+      else if (d.rate_limited) ElMessage.warning('设备被风控：' + (d.rate_limit_msg || '账号异常，请稍后重试'));
+      else ElMessage.success('设备正常：' + (d.item.nickname || d.item.name));
+      this.loadAccounts();
+    },
+    deleteAccount(row) {
+      // 旧文案说「引用它的博主会变为未指定设备」—— 现在的博主模型没有设备归属字段，
+      // 删除设备不会影响任何博主，别给用户错误预期。
+      ElMessageBox.confirm('确定删除该设备？删除后其登录态一并失效，需重新登录才能再用。', '确认删除', { type:'warning', confirmButtonText:'确认删除', cancelButtonText:'取消' })
+        .then(async () => { await this.api('/api/devices/' + row.id, 'DELETE'); ElMessage.success('已删除'); this.loadAccounts(); this.loadBloggers(); })
+        .catch(() => {});
+    },
+
+        /* 博主 */
+    async loadBloggers() { const d = await this.api('/api/bloggers'); this.bloggers = d.items || []; },
+    windowText(row) {
+      const s = row.monitor_start || '', e = row.monitor_end || '';
+      if (!s && !e) return '全天';
+      if (s && e) return s + ' — ' + e;
+      if (s) return s + ' 起';
+      return '至 ' + e;
+    },
+    openBloggerDialog(row) {
+      this.bloggerEditId = row ? row.id : null;
+      if (row) {
+        const s = row.monitor_start || '', e = row.monitor_end || '';
+        this.bloggerForm = {
+          name: row.name, url: row.url,
+          windowOn: !!(s || e), monitor_start: s, monitor_end: e,
+        };
+      } else {
+        this.bloggerForm = { name: '', url: '', windowOn: false, monitor_start: '', monitor_end: '' };
+      }
+      this.bloggerDialogVisible = true;
+    },
+    async saveBlogger() {
+      if (!this.bloggerForm.url.trim()) { ElMessage.warning('请填写主页链接'); return; }
+      const f = this.bloggerForm;
+      if (f.windowOn && !f.monitor_start && !f.monitor_end) { ElMessage.warning('请选择监控时段的开始与结束时间'); return; }
+      if (f.windowOn && f.monitor_start && f.monitor_end && f.monitor_start === f.monitor_end) {
+        ElMessage.warning('开始与结束时间不能相同'); return;
+      }
+      this.saving = true;
+      const body = {
+        name: f.name, url: f.url,
+        monitor_start: f.windowOn ? (f.monitor_start || '') : '',
+        monitor_end: f.windowOn ? (f.monitor_end || '') : '',
+      };
+      try {
+        if (this.bloggerEditId) {
+          const d = await this.api('/api/bloggers/' + this.bloggerEditId, 'PUT', body);
+          // 后端 400（链接无效 / 与已有博主重复）也要提示，原来不判 ok 会误报「已保存」
+          if (d && d.ok) {
+            this.bloggerDialogVisible = false; ElMessage.success('已保存'); this.loadBloggers();
+          } else {
+            ElMessage.error((d && (d.detail || d.error)) || '保存失败');
+          }
+        } else {
+          const d = await this.api('/api/bloggers', 'POST', body);
+          if (d.ok) { this.bloggerDialogVisible = false; ElMessage.success('已添加，基线建立完成（' + d.item.baseline_count + ' 条）'); this.loadBloggers(); }
+          else ElMessage.error(d.detail || d.error || '添加失败');
+        }
+      } finally { this.saving = false; }
+    },
+    async refreshBlogger(row) {
+      const d = await this.api('/api/bloggers/' + row.id + '/refresh?force=true', 'POST');
+      if (d.skipped_by_window) {
+        ElMessage.warning('当前不在监控时段（' + this.windowText(row) + '），已跳过抓取');
+      } else if (d.ok) {
+        ElMessage.success('抓取完成，新增 ' + d.new_count + ' 条笔记');
+      } else {
+        ElMessage.error('抓取失败：' + (d.error || ''));
+      }
+      this.loadBloggers();
+    },
+    deleteBlogger(row) {
+      ElMessageBox.confirm('确定删除该博主及其所有笔记记录？', '确认删除', { type:'warning', confirmButtonText:'确认删除', cancelButtonText:'取消' })
+        .then(async () => { await this.api('/api/bloggers/' + row.id, 'DELETE'); ElMessage.success('已删除'); this.loadBloggers(); })
+        .catch(() => {});
+    },
+    async toggleBlock(row) {
+      const target = row.status === 'blocked' ? 'active' : 'blocked';
+      const act = target === 'blocked' ? '拉黑' : '恢复';
+      try {
+        const d = await this.api('/api/bloggers/' + row.id, 'PUT', { status: target });
+        if (d.ok) { ElMessage.success('已' + act); this.loadBloggers(); }
+        else ElMessage.error('操作失败：' + (d.error || ''));
+      } catch (e) {
+        ElMessage.error('操作失败');
+      }
+    },
+    openFollowImport() {
+      if (!this.accounts.length) { ElMessage.warning('请先在设备管理添加设备'); return; }
+      this.followImportVisible = true;
+      this.followItems = []; this.followSelection = []; this.followImportDeviceId = null;
+      this.followImportWindowOn = false; this.followImportStart = ''; this.followImportEnd = '';
+      // 默认选第一个 active 设备
+      const act = this.accounts.find(a => a.status === 'active');
+      if (act) this.followImportDeviceId = act.id;
+    },
+    async fetchFollowings() {
+      if (!this.followImportDeviceId) { ElMessage.warning('请先选择设备'); return; }
+      this.followLoading = true;
+      try {
+        const d = await this.api('/api/followings/list', 'POST', { device_id: this.followImportDeviceId });
+        this.followItems = d.items || [];
+        if (!this.followItems.length) ElMessage({ message: '该设备未返回关注数据。此接口对设备风控分最敏感：新设备/被降权设备都会空返回。建议用已养号几天的设备，或改用「添加博主」手动填 user_id。', type: 'warning', duration: 6000 });
+        else ElMessage.success('获取到 ' + d.total + ' 个关注');
+      } finally { this.followLoading = false; }
+    },
+    onFollowSelectionChange(rows) { this.followSelection = rows; },
+    canSelectRow(row) { return !row.already; },
+    async importFollowings() {
+      if (!this.followSelection.length) { ElMessage.warning('请勾选要导入的博主'); return; }
+      if (this.followImportWindowOn && !this.followImportStart && !this.followImportEnd) {
+        ElMessage.warning('请选择监控时段的开始与结束时间'); return;
+      }
+      if (this.followImportWindowOn && this.followImportStart && this.followImportStart === this.followImportEnd) {
+        ElMessage.warning('开始与结束时间不能相同'); return;
+      }
+      const d = await this.api('/api/bloggers/import-followings', 'POST', {
+        device_id: this.followImportDeviceId, items: this.followSelection,
+        monitor_start: this.followImportWindowOn ? (this.followImportStart || '') : '',
+        monitor_end: this.followImportWindowOn ? (this.followImportEnd || '') : '',
+      });
+      ElMessage.success('导入完成：新增 ' + d.imported + ' 个，跳过 ' + d.skipped + ' 个');
+      this.followImportVisible = false;
+      this.loadBloggers();
+    },
+    onBloggerSelectionChange(rows) { this.bloggerSelection = rows; },
+    openBatchDialog() {
+      if (!this.bloggerSelection.length) { ElMessage.warning('请先勾选博主'); return; }
+      this.batchForm = { windowMode: 'keep', monitor_start: '', monitor_end: '' };
+      this.batchDialogVisible = true;
+    },
+    async saveBatch() {
+      const f = this.batchForm;
+      if (f.windowMode === 'set') {
+        if (!f.monitor_start && !f.monitor_end) { ElMessage.warning('请选择监控时段的开始与结束时间'); return; }
+        if (f.monitor_start && f.monitor_start === f.monitor_end) { ElMessage.warning('开始与结束时间不能相同'); return; }
+      }
+      const body = {
+        ids: this.bloggerSelection.map(b => b.id),
+        clear_window: f.windowMode === 'clear',
+      };
+      if (f.windowMode === 'set') {
+        body.monitor_start = f.monitor_start || '';
+        body.monitor_end = f.monitor_end || '';
+      }
+      const d = await this.api('/api/bloggers/batch-update', 'POST', body);
+      ElMessage.success('已更新 ' + d.updated + ' 个博主');
+      this.batchDialogVisible = false;
+      this.loadBloggers();
+    },
+
+    /* 笔记 */
+    async loadNotes() {
+      const q = this.noteFilterBloggerId ? ('?blogger_id=' + this.noteFilterBloggerId) : '';
+      const d = await this.api('/api/notes' + q);
+      this.notes = d.items || []; this.notesTotal = d.total || 0; this.noteSelection = [];
+    },
+    onNoteSelectionChange(rows) { this.noteSelection = rows; },
+    deleteSelectedNotes() {
+      if (!this.noteSelection.length) { ElMessage.warning('请先勾选要删除的笔记'); return; }
+      ElMessageBox.confirm('确定删除选中的 ' + this.noteSelection.length + ' 条笔记？', '确认删除', { type:'warning', confirmButtonText:'确认删除', cancelButtonText:'取消' })
+        .then(async () => {
+          await this.api('/api/notes/delete', 'POST', { ids: this.noteSelection.map(n=>n.id) });
+          ElMessage.success('已删除'); this.loadNotes();
+        }).catch(() => {});
+    },
+    clearNotes() {
+      const msg = this.noteFilterBloggerId ? '确定清空该博主的全部笔记？' : '确定清空全部笔记？';
+      ElMessageBox.confirm(msg, '确认清空', { type:'warning', confirmButtonText:'确认清空', cancelButtonText:'取消' })
+        .then(async () => {
+          await this.api('/api/notes/clear', 'DELETE', { blogger_id: this.noteFilterBloggerId });
+          ElMessage.success('已清空'); this.loadNotes();
+        }).catch(() => {});
+    },
+    async copyNote(url) {
+      try { await navigator.clipboard.writeText(url); ElMessage.success('链接已复制'); }
+      catch(e) {
+        const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove(); ElMessage.success('链接已复制');
+      }
+    },
+
+    /* 设置 */
+    async changePassword() {
+      if (!this.pwdForm.old) { ElMessage.warning('请输入旧密码'); return; }
+      if (this.pwdForm.newPwd.length < 4) { ElMessage.warning('新密码至少 4 位'); return; }
+      if (this.pwdForm.newPwd !== this.pwdForm.confirm) { ElMessage.warning('两次输入的新密码不一致'); return; }
+      const d = await this.api('/api/auth/password', 'POST', { old_password: this.pwdForm.old, new_password: this.pwdForm.newPwd });
+      if (d.ok) {
+        this.pwdForm = { old:'', newPwd:'', confirm:'' };
+        ElMessage.success('密码已修改，请重新登录');
+        setTimeout(() => this.doLogout(), 800);
+      } else ElMessage.error(d.detail || '修改失败');
+    },
+
+    /* 推送 */
+    async loadNotifyConfig() {
+      try { const d = await this.api('/api/notify/config'); this.notifyConfig = d; } catch(e) {}
+    },
+    async saveNotifyConfig() {
+      await this.api('/api/notify/config', 'POST', this.notifyConfig);
+      ElMessage.success('推送配置已保存');
+    },
+    async testNotify() {
+      const d = await this.api('/api/notify/test', 'POST', this.notifyConfig);
+      if (d.ok_count > 0 && (!d.failures || d.failures.length === 0)) ElMessage.success('测试成功，已推送 ' + d.ok_count + ' 个渠道');
+      else if (d.ok_count > 0) ElMessage.warning('部分成功：成功 ' + d.ok_count + '，失败 ' + d.failures.length + '（' + d.failures.join('；') + '）');
+      else if (d.failures && d.failures.length) ElMessage.error('推送失败：' + d.failures.join('；'));
+      else ElMessage.warning('请先启用至少一个渠道');
+    },
+    async loadTunables() {
+      try { const d = await this.api('/api/settings/tunables'); this.tunables = d; } catch(e) {}
+    },
+    async saveTunables() {
+      this.savingTunables = true;
+      try {
+        const d = await this.api('/api/settings/tunables', 'POST', this.tunables);
+        this.tunables = d.config || this.tunables;
+        ElMessage.success('监控参数已保存，立即生效');
+      } catch(e) {
+        ElMessage.error('保存失败：' + (e && e.message ? e.message : '未知错误'));
+      } finally {
+        this.savingTunables = false;
+      }
+    },
+
+    /* 工具 */
+    statusType(s) {
+      const map = { active:'success', expired:'danger', kicked:'danger', anomaly:'danger', rate_limited:'warning', paused:'info', unknown:'info' };
+      return map[s] || 'info';
+    },
+    statusText(s) {
+      const map = { active:'正常', expired:'登录过期', kicked:'被踢下线', anomaly:'风控异常', rate_limited:'风控中', paused:'已暂停', blocked:'已拉黑', unknown:'未知' };
+      return map[s] || s;
+    },
+    fmtTime(ms) { if (!ms) return '—'; return new Date(ms).toLocaleString('zh-CN', { hour12:false }); },
+  }
+});
+
+// 注册所有图标
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component);
+}
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn });
+app.mount('#app');
+</script>
+</body>
+</html>

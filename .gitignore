@@ -1,0 +1,35 @@
+# ===== 运行时数据（绝不入库）=====
+data/xhs_admin.db
+data/xhs_admin.db-journal
+data/xhs_admin.db-wal
+data/monitor.log*
+data/covers/
+*.db
+*.log
+
+# 逆向资产随项目发布（data/reverse 保留，见下）
+# 如需排除，取消下一行注释
+# data/reverse/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# ===== 一次性排查 / 临时脚本 =====
+_*.py
+_tmp*
+
+# ===== 部署脚本（含服务器凭据，绝不入库）=====
+deploy/
+*.tgz
+*.bak
+
+# ===== 本地/IDE =====
+.env
+.DS_Store
+.idea/
+.vscode/
