@@ -553,11 +553,23 @@ def reverse_selftest(_=Depends(require_auth)):
 
     def _s1():
         ts = 1792754000
-        real = xhs_core.make_s1(b'canon', 1, ts, xhs_perm.make_perm8_zero(ts), list(range(4)))
+        p8, p4 = xhs_perm.make_perm8_zero(ts), xhs_perm.make_perm4_zero(ts)
+        real = xhs_core.make_s1(b'canon', 1, ts, p8, p4)
         ident = xhs_core.make_s1(b'canon', 1, ts, list(range(8)), list(range(4)))
-        assert real != ident, 's1 没接上真 perm8（与恒等输出相同）'
+        assert real != ident, 's1 没接上真 perm8/perm4（与恒等输出相同）'
         assert len(real) > 60, 's1 太短: %d' % len(real)
-        return 'len=%d 与恒等不同=是' % len(real)
+        return 'len=%d perm8=%s perm4=%s 与恒等不同=是' % (len(real), p8, p4)
+
+    def _perm4():
+        # perm4 2026-10-26 破解基准值（363/363 真实 s1 样本反推）
+        assert xhs_perm.make_perm4(1792754000) == [2, 1, 3, 4], \
+            'perm4 基准值不符: %s' % xhs_perm.make_perm4(1792754000)
+        assert xhs_perm.make_perm4(1792069748) == [2, 3, 4, 1], \
+            'perm4 基准值不符: %s' % xhs_perm.make_perm4(1792069748)
+        assert xhs_perm.make_perm4(1791636050) == [3, 1, 2, 4], \
+            'perm4 基准值不符: %s' % xhs_perm.make_perm4(1791636050)
+        assert xhs_perm.make_perm4_zero(1792754000) == [1, 0, 2, 3], 'perm4 0-based 换算错'
+        return 'ts=1792754000 → %s' % xhs_perm.make_perm4(1792754000)
 
     def _sig():
         sig = xhs_core.compute_sig(b'canon')
@@ -580,6 +592,7 @@ def reverse_selftest(_=Depends(require_auth)):
 
     ck('shield', _shield)
     ck('perm8', _perm8)
+    ck('perm4', _perm4)
     ck('s1', _s1)
     ck('sig', _sig)
     ck('material_rule', _mat_rule)

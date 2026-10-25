@@ -116,7 +116,6 @@ def encode_perm(p):
     return bytes(out)
 
 
-# encode_perm 的对称函数：仅用于自检/调试，无生产调用方
 def decode_perm(raw):
     """enc_seq 字节 -> 排列"""
     out = []
@@ -137,10 +136,32 @@ def make_perm8_zero(ts):
     return [x - 1 for x in make_perm8(ts)]
 
 
-# perm4 尚未破解（只依赖 ts，615 个模型组合全不中）。此函数为将来替换恒等 perm4 预留，
+# perm4 的编译期常量初值（与 perm8 的 Q 同源独立；2026-10-26 由 363/363 样本反推确定）
+Q4 = [2, 1, 3, 4]
+
+
 def make_perm4(ts):
-    """perm4 = perm8 前 4 个元素（0-based），补 4 → 4 的映射时用"""
-    return make_perm8_zero(ts)[:4]
+    """由 ts 生成 perm4（1..4 的排列）—— 2026-10-26 完全破解。
+
+    与 perm8 完全同构（倒序 Fisher-Yates），唯一差别是：
+      ★ **独立新建 rng**（offset=0），不续用 perm8 已消耗的 7 个随机数。
+
+    即 perm8 与 perm4 各用一颗同种子(ts)的新 rng，perm4 取 r[0..2]（模 4/3/2）。
+
+    验证：**363 / 363** —— 9.19.2（320 条）+ 9.49.1 真实请求头（43 条），
+    共 37 个不同 ts，seed44[42:44] 逐字节一致；端到端重建整条 s1 也 320/320。
+    """
+    rng = BionicRandom(ts)
+    a = Q4[:]
+    for i in range(3, 0, -1):
+        j = rng.next() % (i + 1)
+        a[i], a[j] = a[j], a[i]
+    return a
+
+
+def make_perm4_zero(ts):
+    """0-based 版本（make_s1 里的 perm4 参数用这个）"""
+    return [x - 1 for x in make_perm4(ts)]
 
 
 # ---------------- 自检 ----------------

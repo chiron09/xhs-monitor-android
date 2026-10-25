@@ -15,7 +15,7 @@ MD5 变体 / hmac_md5 / rc4 / S1 算法与 9.19.2 完全一致（已对比 algo 
 import json, struct, base64, hashlib, time, random, threading, sys, os
 from urllib.parse import urlsplit, urlencode
 
-from xhs_perm import make_perm8_zero   # s1 的真 perm8（320/320 验证）
+from xhs_perm import make_perm8_zero, make_perm4_zero   # s1 的真 perm8/perm4
 
 # 复用 9.19.2 的纯算法层（MD5 变体/hmac/rc4/S1/canonical/get_key64 依赖 shield_sdk）
 from xhs_core import (hmac_md5, rc4, b64url, b64url_dec,
@@ -222,8 +222,8 @@ class XhsSigner9491:
         canon = canonical_str(method, path, query, body if isinstance(body, bytes) else b'', new_mua)
         sig = compute_sig(canon)
         ts = int(time.time())
-        # ★ perm8 真实算法；perm4 未破解保持恒等
-        s1 = make_s1(canon.encode(), counter, ts, make_perm8_zero(ts), list(range(4)))
+        # ★ perm8/perm4 均为真算法（2026-10-26 perm4 也已破解，363/363 验证）
+        s1 = make_s1(canon.encode(), counter, ts, make_perm8_zero(ts), make_perm4_zero(ts))
 
         hdrs = {
             'Accept-Encoding': 'gzip',

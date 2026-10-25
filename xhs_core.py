@@ -26,7 +26,7 @@ import random
 import re
 import threading
 
-from xhs_perm import make_perm8_zero   # s1 的真 perm8（320/320 验证）
+from xhs_perm import make_perm8_zero, make_perm4_zero   # s1 的真 perm8/perm4（bionic random(ts)+倒序 FY）
 from urllib.parse import urlsplit
 
 # ============ 算法库路径 ============
@@ -293,8 +293,10 @@ class XhsSigner:
         canon = canonical_str(method, path, query, body if isinstance(body, bytes) else b'', new_mua)
         sig = compute_sig(canon)
         ts = int(time.time())
-        perm8 = make_perm8_zero(ts)   # ★ 真算法；perm4 仍恒等（未破解，服务端不校验）
-        perm4 = list(range(4))
+        perm8 = make_perm8_zero(ts)
+        # ★ 2026-10-26 破解：perm4 = 独立 BionicRandom(ts) 对 Q4=[2,1,3,4] 倒序 Fisher-Yates
+        #   （363/363 真实 s1 样本逐字节一致，9.19.2 与 9.49.1 通用）
+        perm4 = make_perm4_zero(ts)
         s1 = make_s1(canon.encode(), counter, ts, perm8, perm4)
 
         hdrs = {

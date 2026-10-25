@@ -79,6 +79,7 @@ docs/               文档（见下）
 | 签名轨选择 | `payload.ver == '9.49.1'` → `XhsSigner9491`，否则走 `XhsSigner`(9.19.2) |
 | 实际发送头数 | **17**（签名三头：`x-mini-gid` / `x-mini-mua` / `x-mini-sig`） |
 | `x-mini-s1` | **不发**（dex 全量无此头；62 字节 s1 的真名就是 `x-mini-sig`） |
+| s1 的 perm8 / perm4 | **全部真算法**（bionic `random(ts)` + 倒序 Fisher-Yates；perm4 用 `Q4=[2,1,3,4]`、独立新建 rng。363/363 真实样本验证） |
 | `hmac` 长度 | 必须是 **96 字节**（base64 后 128 字符），否则 key64 派生失败 |
 | 材料一致性 | UA `Version/x Build/y` ↔ cp `versionName/build` ↔ platform_info `build`；mua 头 `v` ↔ ver；cp `cpu_abi` = `armeabi-v7a` |
 | 吃内容额度的接口 | 7 类，详见 `docs/03`。**详情族额度远小于普通接口**，一见 `461 + code=0` 立刻停手 |
